@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Admin;
 use App\Models\Post;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Storage;
+
 
 
 class PostController extends Controller
@@ -14,7 +16,8 @@ class PostController extends Controller
      */
     public function index()
     {
-        //
+        $posts = Post::all();
+        return view('admin.posts.index', compact('posts'));
     }
 
     /**
@@ -22,7 +25,7 @@ class PostController extends Controller
      */
     public function create()
     {
-        //
+        return view('admin.posts.create');
     }
 
     /**
@@ -30,7 +33,21 @@ class PostController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $request->validate([
+            'title' => 'required',
+            'image' => 'required|image|mimes:jpeg,png,jpg,gif',
+            'content' => 'required',
+        ]);
+
+        $imagePath = $request->file('image')->store('uploads', 'public');
+
+        Post::create([
+            'title' => $request->input('title'),
+            'image' => $imagePath,
+            'content' => $request->input('content'),
+        ]);
+
+        return redirect()->route('admin.posts.index')->with('success', 'Il post è stato creato con successo.');
     }
 
     /**
@@ -38,7 +55,7 @@ class PostController extends Controller
      */
     public function show(Post $post)
     {
-        //
+        return view('admin.posts.show', compact('post'));
     }
 
     /**
@@ -46,7 +63,7 @@ class PostController extends Controller
      */
     public function edit(Post $post)
     {
-        //
+        return view('admin.posts.edit', compact('post'));
     }
 
     /**
@@ -54,7 +71,26 @@ class PostController extends Controller
      */
     public function update(Request $request, Post $post)
     {
-        //
+        $request->validate([
+            'title' => 'required',
+            'image' => 'image|mimes:jpeg,png,jpg,gif',
+            'content' => 'required',
+        ]);
+
+        if ($request->hasFile('image')) {
+            Storage::delete('public/' . $post->image);
+            $imagePath = $request->file('image')->store('uploads', 'public');
+            $post->update([
+                'image' => $imagePath,
+            ]);
+        }
+
+        $post->update([
+            'title' => $request->input('title'),
+            'content' => $request->input('content'),
+        ]);
+
+        return redirect()->route('admin.posts.index')->with('success', 'Il post è stato aggiornato con successo.');
     }
 
     /**
@@ -62,6 +98,9 @@ class PostController extends Controller
      */
     public function destroy(Post $post)
     {
-        //
+        Storage::delete('public/' . $post->image);
+        $post->delete();
+
+        return redirect()->route('admin.posts.index')->with('success', 'Il post è stato eliminato con successo.');
     }
 }

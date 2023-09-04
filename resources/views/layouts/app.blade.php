@@ -20,6 +20,7 @@
 </head>
 
 <body>
+
     <div id="app">
 
 
@@ -43,6 +44,11 @@
                         <li class="nav-item">
                             <a class="nav-link" href="{{ url('/') }}">{{ __('Home') }}</a>
                         </li>
+                        @Auth
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ route('admin.posts.index') }}">Posts</a>
+                            </li>
+                        @endauth
                     </ul>
 
                     <!-- Right Side Of Navbar -->
@@ -83,11 +89,30 @@
                 </div>
             </div>
         </nav>
+        <div class="container">
 
-        <main class="">
+            @if ($errors->any())
+                <div class="alert alert-danger">
+                    <ul>
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+            @if (session('success'))
+                <div class="alert alert-success">
+                    {{ session('success') }}
+                </div>
+            @endif
+        </div>
+        <main class="container mt-3">
             @yield('content')
         </main>
     </div>
+
+
+
 </body>
 
 </html>
