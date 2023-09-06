@@ -35,7 +35,7 @@ class PostController extends Controller
     {
         $request->validate([
             'title' => 'required',
-            'image' => 'required|image|mimes:jpeg,png,jpg,gif',
+            'image' => 'required|image',
             'content' => 'required',
         ]);
 
@@ -69,16 +69,23 @@ class PostController extends Controller
     /**
      * Update the specified resource in storage.
      */
+    private function deleteImageFromStorage($imagePath)
+    {
+        if (!empty($imagePath)) {
+            Storage::delete($imagePath);
+        }
+    }
+
     public function update(Request $request, Post $post)
     {
         $request->validate([
             'title' => 'required',
-            'image' => 'image|mimes:jpeg,png,jpg,gif',
+            'image' => 'image',
             'content' => 'required',
         ]);
 
         if ($request->hasFile('image')) {
-            Storage::delete('public/' . $post->image);
+            $this->deleteImageFromStorage($post->image);
             $imagePath = $request->file('image')->store('uploads', 'public');
             $post->update([
                 'image' => $imagePath,
@@ -93,12 +100,13 @@ class PostController extends Controller
         return redirect()->route('admin.posts.index')->with('success', 'Il post è stato aggiornato con successo.');
     }
 
+
     /**
      * Remove the specified resource from storage.
      */
     public function destroy(Post $post)
     {
-        Storage::delete('public/' . $post->image);
+        $this->deleteImageFromStorage($post->image);
         $post->delete();
 
         return redirect()->route('admin.posts.index')->with('success', 'Il post è stato eliminato con successo.');
